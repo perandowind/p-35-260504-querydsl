@@ -46,8 +46,10 @@ class MemberRepositoryImpl(
 
         return jpaQueryFactory
             .selectFrom(member)
-            .where(member.username.eq(username)
-                .and(member.nickname.eq(nickname))) // where member.username = name and member.nickname = nickname
+            .where(
+                member.username.eq(username)
+                    .and(member.nickname.eq(nickname))
+            ) // where member.username = name and member.nickname = nickname
             .fetchOne() // limit 1
     }
 
@@ -59,9 +61,31 @@ class MemberRepositoryImpl(
 
         return jpaQueryFactory
             .selectFrom(member)
-            .where(member.username.eq(username)
-                .or(member.nickname.eq(nickname))) // where member.username = name or member.nickname = nickname
+            .where(
+                member.username.eq(username)
+                    .or(member.nickname.eq(nickname))
+            ) // where member.username = name or member.nickname = nickname
             .fetch() // 여러개 가져올때 = fetch() 사용
+    }
+
+    override fun findQByUsernameAndEitherPasswordOrNickname(
+        username: String,
+        password: String,
+        nickname: String
+    ): List<Member> {
+        val member = QMember.member
+
+        // select * from member where username = ? and (password = ? or nickname = ?)
+        return jpaQueryFactory
+            .selectFrom(member)
+            .where(
+                member.username.eq(username)
+                    .and(
+                        member.password.eq(password)
+                        .or(member.nickname.eq(nickname))
+                    )
+            )
+            .fetch()
     }
 
 
