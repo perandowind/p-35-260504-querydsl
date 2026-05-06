@@ -9,4 +9,7 @@ interface MemberRepositoryCustom {
     fun findQByUsernameAndNickname(username: String, nickname: String): Member?
     fun findQByUsernameOrNickname(username: String, nickname: String): List<Member> // Or이므로 여러개 반환가능
     fun findQByUsernameAndEitherPasswordOrNickname(username: String, password: String, nickname: String): List<Member>
+    fun findQByNicknameContaining(nickname: String): List<Member>
+    fun countQByNicknameContaining(nickname: String): Long
+    fun existsQByNicknameContaining(nickname: String): Boolean
 }
