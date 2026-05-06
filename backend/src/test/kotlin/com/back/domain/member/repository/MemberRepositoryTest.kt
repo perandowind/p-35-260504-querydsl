@@ -136,4 +136,29 @@ class MemberRepositoryTest {
         val pageable = PageRequest.of(0, 2)
         val page = memberRepository.findQByNicknameContaining("유저1", pageable)
     }
+
+    @Test
+    fun `findByNicknameContainingOrderByIdDesc`() {
+        val members = memberRepository.findByNicknameContainingOrderByIdDesc("유저")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.all { it.nickname.contains("유저") }).isTrue
+
+        for (i in 0 until members.size - 1) {
+            assertThat(members[i].id).isGreaterThan(members[i + 1].id)
+        }
+    }
+
+    @Test
+    fun `findQByNicknameContainingOrderByIdDesc`() {
+        val members = memberRepository.findQByNicknameContainingOrderByIdDesc("유저")
+
+        assertThat(members).isNotEmpty
+        assertThat(members.all { it.nickname.contains("유저") }).isTrue
+
+        for (i in 0 until members.size - 1) {
+            //println(members[i].id.toString()) // 5, 4 로 내림차순 조회 성공
+            assertThat(members[i].id).isGreaterThan(members[i + 1].id)
+        }
+    }
 }
