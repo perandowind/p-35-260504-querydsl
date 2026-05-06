@@ -2,9 +2,14 @@ package com.back.domain.member.repository
 
 import com.back.domain.member.entity.Member
 import com.back.domain.member.entity.QMember
+import com.querydsl.core.types.Expression
+import com.querydsl.core.types.Order
+import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.dsl.PathBuilder
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.support.PageableExecutionUtils
 
 class MemberRepositoryImpl(
@@ -144,23 +149,27 @@ class MemberRepositoryImpl(
     ): Page<Member> {
         val member = QMember.member
 
-        val query = jpaQueryFactory
+        val content = jpaQueryFactory
             .selectFrom(member)
             .where(member.username.contains(username))
-
-        pageable.sort.forEach { order ->
-            when (order.property) {
-                "id" -> query.orderBy(if (order.isAscending) member.id.asc() else member.id.desc())
-                "username" -> query.orderBy(if (order.isAscending) member.username.asc() else member.username.desc())
-                "nickname" -> query.orderBy(if (order.isAscending) member.nickname.asc() else member.nickname.desc())
-            }
-        }
-
-        // content 쿼리
-        val content = query
+            .orderBy(*getOrderSpecifier(pageable.sort))
             .offset(pageable.offset)
             .limit(pageable.pageSize.toLong())
             .fetch()
+
+//        pageable.sort.forEach { order ->
+//            when (order.property) {
+//                "id" -> query.orderBy(if (order.isAscending) member.id.asc() else member.id.desc())
+//                "username" -> query.orderBy(if (order.isAscending) member.username.asc() else member.username.desc())
+//                "nickname" -> query.orderBy(if (order.isAscending) member.nickname.asc() else member.nickname.desc())
+//            }
+//        }
+
+        // content 쿼리
+//        val content = query
+//            .offset(pageable.offset)
+//            .limit(pageable.pageSize.toLong())
+//            .fetch()
 
         return PageableExecutionUtils.getPage(
             content,
@@ -215,6 +224,23 @@ class MemberRepositoryImpl(
         } // 람다함수가 제일 나중 파라미터에 위치한 경우 밖으로 빼도됨
 
 //        return PageImpl(result, pageable, totalCount)
+    }
+
+    /**커스텀 정렬 메서드 getOrderSpecifier 정의*/
+    private fun getOrderSpecifier(sort: Sort): Array<OrderSpecifier<*>> {
+        // 1. QClass의 실제 alias를 가져옴 (타입 안정성 확보)
+        val pathBuilder = PathBuilder(Member::class.java, QMember.member.metadata.name)
+
+        // 2. map을 이용해 Sort -> OrderSpecifier로 바로 변환
+        return sort.map { order ->
+            val direction = if (order.isAscending) Order.ASC else Order.DESC
+
+            // 3. 가독성을 위해 불필요한 중간 변수 제거 및 캐스팅 처리
+            OrderSpecifier(
+                direction,
+                pathBuilder.get(order.property) as Expression<out Comparable<*>>
+            )
+        }.toList().toTypedArray()
     }
 
 
