@@ -2,6 +2,8 @@ package com.back.domain.member.repository
 
 import com.back.domain.member.entity.Member
 import com.back.domain.member.entity.QMember
+import com.back.standard.enums.MemberSearchKeywordType
+import com.back.standard.enums.MemberSearchSortType
 import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.Expression
 import com.querydsl.core.types.Order
@@ -227,15 +229,19 @@ class MemberRepositoryImpl(
 //        return PageImpl(result, pageable, totalCount)
     }
 
-    override fun findByKwPaged(kw: String, kwType: String, pageable: Pageable): Page<Member> {
+    override fun findByKwPaged(
+        kw: String,
+        kwType: MemberSearchKeywordType,
+        sort: MemberSearchSortType,
+        pageable: Pageable): Page<Member> {
 
         val member = QMember.member
 
         val builder = BooleanBuilder().apply {
-            when(kwType.uppercase()) {
-                "USERNAME" -> this.and(member.username.contains(kw))
-                "NICKNAME" -> this.and(member.nickname.contains(kw))
-                "ALL" -> {
+            when(kwType) {
+                MemberSearchKeywordType.USERNAME -> this.and(member.username.contains(kw))
+                MemberSearchKeywordType.NICKNAME -> this.and(member.nickname.contains(kw))
+                MemberSearchKeywordType.ALL -> {
                     this.and(
                         member.username.contains(kw).or(
                             member.nickname.contains(kw))
@@ -247,6 +253,14 @@ class MemberRepositoryImpl(
         val query = jpaQueryFactory
             .selectFrom(member)
             .where(builder)
+
+        pageable.sort.forEach { order ->
+            when (order.property.lowercase()) {
+                MemberSearchSortType.ID.property -> query.orderBy(if (order.isAscending) member.id.asc() else member.id.desc())
+                MemberSearchSortType.USERNAME.property -> query.orderBy(if (order.isAscending) member.username.asc() else member.username.desc())
+                MemberSearchSortType.NICKNAME.property -> query.orderBy(if (order.isAscending) member.nickname.asc() else member.nickname.desc())
+            }
+        }
 
         val content = query
             .offset(pageable.offset)
