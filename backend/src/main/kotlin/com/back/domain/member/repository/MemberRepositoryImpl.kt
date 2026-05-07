@@ -2,6 +2,7 @@ package com.back.domain.member.repository
 
 import com.back.domain.member.entity.Member
 import com.back.domain.member.entity.QMember
+import com.querydsl.core.BooleanBuilder
 import com.querydsl.core.types.Expression
 import com.querydsl.core.types.Order
 import com.querydsl.core.types.OrderSpecifier
@@ -225,6 +226,37 @@ class MemberRepositoryImpl(
 
 //        return PageImpl(result, pageable, totalCount)
     }
+
+    override fun findByKwPaged(kw: String, pageable: Pageable): Page<Member> {
+
+        val member = QMember.member
+
+        val builder = BooleanBuilder().apply {
+            this.and(member.nickname.contains(kw))
+        }
+
+        val query = jpaQueryFactory
+            .selectFrom(member)
+            .where(builder)
+
+        val content = query
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+
+        return PageableExecutionUtils.getPage(content, pageable) {
+            jpaQueryFactory
+                .select(member.count())
+                .from(member)
+                .where(builder)
+                .fetchOne() ?: 0L
+        }
+    }
+
+
+
+
+
 
     /**커스텀 정렬 메서드 getOrderSpecifier 정의*/
     private fun getOrderSpecifier(sort: Sort): Array<OrderSpecifier<*>> {
