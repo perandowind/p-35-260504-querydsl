@@ -229,11 +229,7 @@ class MemberRepositoryImpl(
 //        return PageImpl(result, pageable, totalCount)
     }
 
-    override fun findByKwPaged(
-        kw: String,
-        kwType: MemberSearchKeywordType,
-        sort: MemberSearchSortType,
-        pageable: Pageable): Page<Member> {
+    override fun findByKwPaged(kw: String, kwType: MemberSearchKeywordType, pageable: Pageable): Page<Member> {
 
         val member = QMember.member
 
@@ -255,10 +251,20 @@ class MemberRepositoryImpl(
             .where(builder)
 
         pageable.sort.forEach { order ->
-            when (order.property.lowercase()) {
-                MemberSearchSortType.ID.property -> query.orderBy(if (order.isAscending) member.id.asc() else member.id.desc())
-                MemberSearchSortType.USERNAME.property -> query.orderBy(if (order.isAscending) member.username.asc() else member.username.desc())
-                MemberSearchSortType.NICKNAME.property -> query.orderBy(if (order.isAscending) member.nickname.asc() else member.nickname.desc())
+            val path = when (order.property.lowercase()) {
+                MemberSearchSortType.ID.property -> member.id
+                MemberSearchSortType.USERNAME.property -> member.username
+                MemberSearchSortType.NICKNAME.property -> member.nickname
+                else -> null
+            }
+
+            path?.let { property ->
+                OrderSpecifier(
+                    if (order.isAscending) Order.ASC else Order.DESC,
+                    property
+                ).also {
+                    query.orderBy(it)
+                }
             }
         }
 

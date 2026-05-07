@@ -83,6 +83,6 @@ class MemberService(
             else
                 Sort.by(sort.property).descending()
         )
-        return memberRepository.findByKwPaged(kw, kwType, sort, pageable)
+        return memberRepository.findByKwPaged(kw, kwType, pageable)
     }
 }
