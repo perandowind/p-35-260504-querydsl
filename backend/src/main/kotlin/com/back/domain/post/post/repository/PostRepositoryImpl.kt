@@ -13,20 +13,17 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.support.PageableExecutionUtils
 
 class PostRepositoryImpl(
-    private val jpaQueryFactory: JPAQueryFactory,
+    private val jpaQuery: JPAQueryFactory
 ) : PostRepositoryCustom {
 
-    override fun findQPagedByKw(
-        kwType: PostSearchKeywordType,
-        kw: String,
-        pageable: Pageable
-    ): Page<Post> {
+    override fun findQPagedByKw(kwType: PostSearchKeywordType, kw: String, pageable: Pageable): Page<Post> {
         val post = QPost.post
 
-        val builder = BooleanBuilder()?.apply {
+        val builder = BooleanBuilder().apply {
             when (kwType) {
                 PostSearchKeywordType.TITLE -> this.and(post.title.contains(kw))
                 PostSearchKeywordType.CONTENT -> this.and(post.content.contains(kw))
+                PostSearchKeywordType.AUTHOR_NICKNAME -> this.and(post.author.nickname.contains(kw))
                 PostSearchKeywordType.ALL -> {
                     this.and(
                         post.title.contains(kw).or(
@@ -37,8 +34,9 @@ class PostRepositoryImpl(
             }
         }
 
-        val query = jpaQueryFactory
+        val query = jpaQuery
             .selectFrom(post)
+//            .join(post.author).fetchJoin()
             .where(builder)
 
         pageable.sort.forEach { order ->
@@ -64,7 +62,7 @@ class PostRepositoryImpl(
             .fetch()
 
         return PageableExecutionUtils.getPage(content, pageable) {
-            jpaQueryFactory
+            jpaQuery
                 .select(post.count())
                 .from(post)
                 .where(builder)

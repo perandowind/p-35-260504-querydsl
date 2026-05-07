@@ -5,11 +5,13 @@ import com.back.domain.post.comment.entity.Comment
 import com.back.global.entity.BaseEntity
 import com.back.global.exception.ServiceException
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
 import java.util.*
 
 @Entity
 class Post(
-    @ManyToOne(fetch = FetchType.LAZY) var author: Member,
+    @ManyToOne(fetch = FetchType.LAZY)
+    var author: Member,
     var title: String,
     var content: String,
     @OneToMany(
