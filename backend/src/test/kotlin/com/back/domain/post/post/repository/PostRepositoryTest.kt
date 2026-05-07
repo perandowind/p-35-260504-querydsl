@@ -44,6 +44,8 @@ class PostRepositoryTest {
         println(content[0].author.nickname)
         println(content[2].author.nickname)
 
+        println(content[0].body)
+
         assertThat(content).isNotEmpty
     }
 }
