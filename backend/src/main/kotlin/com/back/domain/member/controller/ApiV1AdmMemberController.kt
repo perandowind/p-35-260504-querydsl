@@ -19,12 +19,13 @@ class ApiV1AdmMemberController(
         @RequestParam("page", defaultValue = "0") page: Int,
         @RequestParam("pageSize", defaultValue = "2") pageSize: Int,
         @RequestParam("kw", defaultValue = "") kw: String,
+        @RequestParam("kwType", defaultValue = "ALL") kwType: String,
     ): PageDto<MemberWithUsernameDto> {
 
         val page = if(page >= 0) page else 0
         val pageSize = if(pageSize >= 5) pageSize else 5
 
-        val pagedResult = memberService.findByPaged(page, pageSize, kw)
+        val pagedResult = memberService.findByPaged(page, pageSize, kw, kwType)
 
         return PageDto<MemberWithUsernameDto>(
             pagedResult.map{

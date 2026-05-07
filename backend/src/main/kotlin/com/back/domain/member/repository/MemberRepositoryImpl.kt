@@ -227,12 +227,21 @@ class MemberRepositoryImpl(
 //        return PageImpl(result, pageable, totalCount)
     }
 
-    override fun findByKwPaged(kw: String, pageable: Pageable): Page<Member> {
+    override fun findByKwPaged(kw: String, kwType: String, pageable: Pageable): Page<Member> {
 
         val member = QMember.member
 
         val builder = BooleanBuilder().apply {
-            this.and(member.nickname.contains(kw))
+            when(kwType.uppercase()) {
+                "USERNAME" -> this.and(member.username.contains(kw))
+                "NICKNAME" -> this.and(member.nickname.contains(kw))
+                "ALL" -> {
+                    this.and(
+                        member.username.contains(kw).or(
+                            member.nickname.contains(kw))
+                    )
+                }
+            }
         }
 
         val query = jpaQueryFactory
