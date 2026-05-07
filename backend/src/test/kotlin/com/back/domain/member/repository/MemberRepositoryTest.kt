@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -192,5 +193,21 @@ class MemberRepositoryTest {
         for (i in 0 until page.content.size - 1) {
             assertThat(page.content[i].id).isGreaterThan(page.content[i + 1].id)
         }
+    }
+
+    @Test
+    @Transactional
+    fun `findById, twice`() {
+        memberRepository.findById(1) // SELECT * FROM member WHERE id = 1
+        memberRepository.findById(1) // DB 조회X, 1차 캐시(영속성 컨택스트) CACHED
+    }
+
+    @Test
+    @Transactional
+    fun `findByUsername, twice`() {
+        println("findByUsername, 1st call")
+        memberRepository.findByUsername("user1") // SELECT * FROM member WHERE username = 'user1'
+        println("findByUsername, 2nd call")
+        memberRepository.findByUsername("user1")
     }
 }
