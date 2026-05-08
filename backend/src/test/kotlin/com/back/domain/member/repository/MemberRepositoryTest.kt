@@ -208,6 +208,9 @@ class MemberRepositoryTest {
         println("findByUsername, 1st call")
         memberRepository.findByUsername("user1") // SELECT * FROM member WHERE username = 'user1'
         println("findByUsername, 2nd call")
-        memberRepository.findByUsername("user1")
+        memberRepository.findByUsername("user1") // JPA의 1차 캐시는 “PK(id) 기반”으로만 동작 -> 쿼리 2번날림
+        // @NaturalId 를 이용해서 username 캐시됨
+        println("findById, 3rd call")
+        memberRepository.findById(2)
     }
 }

@@ -10,6 +10,9 @@ import com.querydsl.core.types.Order
 import com.querydsl.core.types.OrderSpecifier
 import com.querydsl.core.types.dsl.PathBuilder
 import com.querydsl.jpa.impl.JPAQueryFactory
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
+import org.hibernate.Session
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -18,6 +21,19 @@ import org.springframework.data.support.PageableExecutionUtils
 class MemberRepositoryImpl(
     private val jpaQueryFactory: JPAQueryFactory,
 ) : MemberRepositoryCustom {
+
+    @PersistenceContext
+    private lateinit var entityManager: EntityManager
+
+    override fun findByUsername(username: String): Member? {
+        // JPA EntityManager에서 Hibernate Session 추출
+        val session = entityManager.unwrap(Session::class.java)
+
+        // Natural ID 전용 API 사용
+        return session.byNaturalId(Member::class.java)
+            .using("username", username) // 엔티티의 필드명과 값
+            .load()
+    }
 
     override fun findQById(id: Int): Member? {
 
